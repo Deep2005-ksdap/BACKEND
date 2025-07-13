@@ -32,7 +32,7 @@ http://localhost:3002/home
 
 - **Description:** Get all stock, or filter/search by `itemName` and/or `category`.
 - **Query Parameters (optional):**
-  - `itemName` (string, partial/case-insensitive search)
+  - `itemName` (string, **exact match**)
   - `category` (string, exact match)
 - **Example Requests:**
   - `/dashboard`
@@ -44,6 +44,7 @@ http://localhost:3002/home
   {
     "message": "You are in the dashboard",
     "data": {
+      "message": "Items found", // or "No items found"
       "allStock": [
         {
           "_id": "...",
@@ -57,10 +58,14 @@ http://localhost:3002/home
           "updatedAt": "..."
         },
         ...
-      ]
+      ],
+      "totalItems": 1,
+      "addTotal": 5000
     }
   }
   ```
+  - `totalItems`: Number of items returned.
+  - `addTotal`: Sum of `itemPrice * itemUnits` for all returned items.
 
 ---
 
@@ -151,10 +156,11 @@ http://localhost:3002/home
 ## 📝 **Notes**
 
 - All responses are in JSON.
-- For **searching**, `itemName` uses partial, case-insensitive matching.
+- For **searching**, `itemName` uses **exact match** (not partial).
 - For **filtering**, `category` is an exact match.
 - If no query parameters are provided to `/dashboard`, all stock items are returned.
 - Error responses will include a `message` and `error` field.
+- `addTotal` in `/dashboard` is the sum of all `itemPrice * itemUnits` for the returned items.
 
 ---
 
@@ -179,4 +185,4 @@ http://localhost:3002/home
 
 ## 📬 **Contact**
 
-For support, contact the developer
+For support, contact the developer or

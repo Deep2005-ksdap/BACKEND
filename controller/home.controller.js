@@ -11,14 +11,25 @@ exports.getDashboard = async (req, res, next) => {
   console.log("Query Parameters:", { itemName, category });
 
   const allStock = await Stock.find({
-    ...(itemName && { itemName }), //itemName exists than assigned value to itemName
+    ...(itemName && { itemName }), //itemName exists than assigned value to itemName otherwise neglect by mongoose
     ...(category && { category }),
   });
+
+  const inventoryValue = allStock.map(
+    (item) => item.itemPrice * item.itemUnits
+  );
+  const totalItems = allStock.length;
+  const addTotal = (inventoryValue) => {
+    return inventoryValue.reduce((acc, curr) => acc + curr, 0);
+  };
 
   res.status(200).json({
     message: "You are in the dashboard",
     data: {
+      message: allStock.length > 0 ? "Items found" : "No items found",
       allStock,
+      totalItems,
+      addTotal: addTotal(inventoryValue),
     },
   });
 };
