@@ -1,7 +1,7 @@
 # Inventory Trackor API
 
-A simple Node.js + Express + MongoDB backend for managing inventory items.  
-This API supports adding, editing, deleting, searching, and filtering inventory stock.
+A Node.js + Express + MongoDB backend for managing inventory items and users.  
+This API supports user registration/login, adding, editing, deleting, searching, and filtering inventory stock.
 
 ---
 
@@ -15,30 +15,67 @@ http://localhost:3002/home
 
 ## 📚 **Routes & Methods**
 
-### 1. **GET /**
+### **User Routes**
 
-- **Description:** Welcome route.
-- **Request:** None
+#### 1. **POST /user/register**
+
+- **Description:** Register a new user.
+- **Request Body:**
+  ```json
+  {
+    "fullname": { "firstname": "John", "lastname": "Doe" },
+    "email": "john@example.com",
+    "password": "yourpassword"
+  }
+  ```
+- **Validation:**
+  - `fullname.firstname` (min 3 chars)
+  - `email` (valid email)
+  - `password` (min 6 chars)
 - **Response:**
   ```json
   {
-    "message": "Welcome to the Inventory Tracker APP"
+    "message": "Registration successful"
   }
   ```
+  *(or validation errors / user exists)*
 
 ---
 
-### 2. **GET /dashboard**
+#### 2. **POST /user/login**
+
+- **Description:** Login a user.
+- **Request Body:**
+  ```json
+  {
+    "email": "john@example.com",
+    "password": "yourpassword"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "message": "Login successful",
+    "userId": "<user_id>"
+  }
+  ```
+  - Sets a `token` cookie (JWT) for authentication.
+
+---
+
+### **Inventory Routes (All require authentication via JWT token in cookie or Authorization header)**
+
+#### 3. **GET /home/dashboard**
 
 - **Description:** Get all stock, or filter/search by `itemName` and/or `category`.
 - **Query Parameters (optional):**
   - `itemName` (string, **exact match**)
   - `category` (string, exact match)
 - **Example Requests:**
-  - `/dashboard`
-  - `/dashboard?category=electronics`
-  - `/dashboard?itemName=phone`
-  - `/dashboard?category=clothing&itemName=shirt`
+  - `/home/dashboard`
+  - `/home/dashboard?category=electronics`
+  - `/home/dashboard?itemName=phone`
+  - `/home/dashboard?category=clothing&itemName=shirt`
 - **Response:**
   ```json
   {
@@ -54,11 +91,13 @@ http://localhost:3002/home
           "itemBrand": null,
           "itemSize": "M",
           "category": "clothing",
+          "ownerId": "...",
           "createdAt": "...",
           "updatedAt": "..."
         },
         ...
       ],
+      "lowStockItems": [ ... ], // items with itemUnits < 5
       "totalItems": 1,
       "addTotal": 5000
     }
@@ -66,13 +105,14 @@ http://localhost:3002/home
   ```
   - `totalItems`: Number of items returned.
   - `addTotal`: Sum of `itemPrice * itemUnits` for all returned items.
+  - `lowStockItems`: Array of items with less than 5 units.
 
 ---
 
-### 3. **POST /add-item**
+#### 4. **POST /home/add-item**
 
 - **Description:** Add a new stock item.
-- **Request Body (JSON):**
+- **Request Body:**
   ```json
   {
     "itemName": "Laptop",
@@ -95,6 +135,7 @@ http://localhost:3002/home
       "category": "electronics",
       "itemBrand": "Dell",
       "itemSize": null,
+      "ownerId": "...",
       "createdAt": "...",
       "updatedAt": "..."
     }
@@ -103,11 +144,11 @@ http://localhost:3002/home
 
 ---
 
-### 4. **PATCH /edit-item/:itemName**
+#### 5. **PATCH /home/edit-item/:itemName**
 
 - **Description:** Edit an existing stock item by its `itemName`.
 - **Request Params:** `itemName` (string)
-- **Request Body (JSON):** Any fields to update, e.g.:
+- **Request Body:** Any fields to update, e.g.:
   ```json
   {
     "itemPrice": 60000,
@@ -127,7 +168,7 @@ http://localhost:3002/home
 
 ---
 
-### 5. **POST /delete-item/:id**
+#### 6. **DELETE /home/delete-item/:id**
 
 - **Description:** Delete a stock item by its MongoDB `_id`.
 - **Request Params:** `id` (string)
@@ -150,17 +191,21 @@ http://localhost:3002/home
 | itemBrand  | String  | No       | Brand (for electronics)            |
 | itemSize   | String  | No       | Size (for clothing)                |
 | category   | String  | Yes      | Category (e.g., electronics, clothing) |
+| ownerId    | ObjectId| Yes      | Reference to user                  |
 
 ---
 
 ## 📝 **Notes**
 
 - All responses are in JSON.
+- All `/home/*` routes require authentication (JWT in cookie or `Authorization` header).
 - For **searching**, `itemName` uses **exact match** (not partial).
 - For **filtering**, `category` is an exact match.
-- If no query parameters are provided to `/dashboard`, all stock items are returned.
+- If no query parameters are provided to `/home/dashboard`, all stock items are returned.
 - Error responses will include a `message` and `error` field.
 - `addTotal` in `/dashboard` is the sum of all `itemPrice * itemUnits` for the returned items.
+- Passwords are hashed before storing in the database.
+- JWT secret is hardcoded as `"secrets"` for demo; use environment variables in production.
 
 ---
 
@@ -180,9 +225,11 @@ http://localhost:3002/home
 - Express
 - MongoDB (Mongoose)
 - CORS enabled
+- JWT authentication
+- bcrypt password hashing
 
 ---
 
 ## 📬 **Contact**
 
-For support, contact the developer or
+For support, contact the developer or open

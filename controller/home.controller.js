@@ -1,14 +1,8 @@
-const Stock = require("../model/item.module");
+const Stock = require("../model/item.model");
 
-exports.getHome = (req, res, next) => {
-  res.status(200).json({
-    message: "Welcome to the Inventory Tracker APP",
-  });
-};
 
 exports.getDashboard = async (req, res, next) => {
   const { itemName, category } = req.query;
-  console.log("Query Parameters:", { itemName, category });
 
   const allStock = await Stock.find({
     ...(itemName && { itemName }), //itemName exists than assigned value to itemName otherwise neglect by mongoose
@@ -18,17 +12,18 @@ exports.getDashboard = async (req, res, next) => {
   const inventoryValue = allStock.map(
     (item) => item.itemPrice * item.itemUnits
   );
-  const totalItems = allStock.length;
   const addTotal = (inventoryValue) => {
     return inventoryValue.reduce((acc, curr) => acc + curr, 0);
   };
+  const lowStockItems = allStock.filter((item) => item.itemUnits < 5);
 
   res.status(200).json({
     message: "You are in the dashboard",
     data: {
       message: allStock.length > 0 ? "Items found" : "No items found",
       allStock,
-      totalItems,
+      lowStockItems,
+      totalItems: allStock.length,
       addTotal: addTotal(inventoryValue),
     },
   });
@@ -71,12 +66,21 @@ exports.postStock = async (req, res, next) => {
 
 exports.editStock = async (req, res, next) => {
   const itemName = req.params.itemName;
-  console.log(itemName);
   const updatedData = req.body;
-  console.log(updatedData);
+  if (updatedData.category) {
+    if (updatedData.category === "electronics") {
+      updatedData.itemBrand = updatedData.itemBrand || undefined;
+      updatedData.itemSize = undefined;
+    } else if (updatedData.category === "clothing") {
+      updatedData.itemSize = updatedData.itemSize || undefined;
+      updatedData.itemBrand = undefined;
+    } else {
+      updatedData.itemBrand = undefined;
+      updatedData.itemSize = undefined;
+    }
+  }
   try {
     await Stock.findOneAndUpdate({ itemName }, updatedData);
-    console.log("Stock updated successfully");
     res.status(200).json({
       message: "Stock updated successfully",
       data: updatedData,

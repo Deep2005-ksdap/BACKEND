@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema({
   fullname: {
-    fullname: {
+    firstname: {
       type: String,
       required: true,
     },
@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
       type: String,
     },
   },
-  
+
   email: {
     type: String,
     required: true,
@@ -22,15 +22,26 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-
 });
 
+exports.comparePassword = (password, hash) => {
+  console.log(hash);
+  return bcrypt.compare(password, hash)
+    .then((isMatch) => {
+      console.log("Password match:", isMatch);
+      return isMatch;
+    })
+    .catch((err) => {
+      console.error("Error comparing password:", err);
+      throw err;
+    });
+};
+
 exports.passwordHashing = async (user) => {
-  const hashPass = await bcrypt.hash(user.password, 10);
+  const hashPass = await bcrypt.hash(user.password, 12);
   user.password = hashPass;
   await user.save();
   return user;
-}
-
+};
 
 exports.User = mongoose.model("user", userSchema);
