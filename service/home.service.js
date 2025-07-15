@@ -1,18 +1,46 @@
-// const userModel = require("../model/user.model");
+const jwt = require("jsonwebtoken");
 
-// const userInfo = (userId) => {
-//   userModel.User.findById(userId)
-//     .then((user) => {
-//       if (!user) {
-//         throw new Error("User not found");
-//       }
-//       return {
-//         fullname: user.fullname,
-//         email: user.email,
-//       };
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching user info:", error);
-//       throw new Error("Internal server error");
-//     });
-// }
+exports.checkUserMiddleware = (req, res, next) => {
+  console.log("checkUserMiddleware called");
+  const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({
+      message: "Unauthorized access",
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_Secret);
+    req.user = decoded;
+    next();
+  } catch (error) {
+    console.error("Error in checkUserMiddleware:", error);
+    return res.status(401).json({
+      message: "Unauthorized access",
+      error: error.message,
+    });
+  }
+};
+
+exports.userCheck = (req, res, next) => {
+  const ownerId = req.user.userId;
+  if (!ownerId) {
+    return res.status(400).json({
+      message: "Login first to access the feature",
+    });
+  }
+  req.ownerId = ownerId;
+  next();
+}
+
+exports.checkStock = (stock) => {
+  const totalStockValue = stock.reduce((acc, item) => {
+    return acc + item.itemprice * item.itemunits;
+  }, 0);
+  const lowStockItems = stock.filter(item => item.itemunits < 5);
+  return {
+    totalStockValue,
+    lowStockItems,
+    lowStockItemsCount: lowStockItems.length
+  };
+}

@@ -1,30 +1,26 @@
 const Stock = require("../model/item.model");
-
+const { checkStock } = require("../service/home.service");
 
 exports.getDashboard = async (req, res, next) => {
-  const { itemName, category } = req.query;
+  const ownerId = req.ownerId;
+  const { itemname, category } = req.query;
 
   const allStock = await Stock.find({
-    ...(itemName && { itemName }), //itemName exists than assigned value to itemName otherwise neglect by mongoose
+    ownerId,
+    ...(itemname && { itemname }),
     ...(category && { category }),
   });
-
-  const inventoryValue = allStock.map(
-    (item) => item.itemPrice * item.itemUnits
-  );
-  const addTotal = (inventoryValue) => {
-    return inventoryValue.reduce((acc, curr) => acc + curr, 0);
-  };
-  const lowStockItems = allStock.filter((item) => item.itemUnits < 5);
-
+  const addTotal = checkStock(allStock);
+  const lowStockItems = addTotal.lowStockItems;
+  const lowStockItemsCount = addTotal.lowStockItemsCount;
   res.status(200).json({
     message: "You are in the dashboard",
     data: {
       message: allStock.length > 0 ? "Items found" : "No items found",
-      allStock,
       lowStockItems,
-      totalItems: allStock.length,
-      addTotal: addTotal(inventoryValue),
+      lowStockItemsCount,
+      totalStockValue: addTotal.totalStockValue,
+      allStock,
     },
   });
 };
@@ -32,24 +28,26 @@ exports.getDashboard = async (req, res, next) => {
 exports.postStock = async (req, res, next) => {
   try {
     if (
-      !req.body.itemName ||
-      !req.body.itemPrice ||
-      !req.body.itemUnits ||
+      !req.body.itemname ||
+      !req.body.itemprice ||
+      !req.body.itemunits ||
       !req.body.category
     ) {
       return res.status(400).json({
         message: "All fields are required",
       });
     }
-    const { itemName, itemPrice, itemUnits, itemBrand, itemSize, category } =
+    const ownerId = req.ownerId;
+    const { itemname, itemprice, itemunits, itembrand, itemsize, category } =
       req.body;
     const newItem = new Stock({
-      itemName,
-      itemPrice,
-      itemUnits,
+      itemname,
+      itemprice,
+      itemunits,
       category,
-      itemBrand: category === "electronics" ? itemBrand : undefined,
-      itemSize: category === "clothing" ? itemSize : undefined,
+      ownerId,
+      itembrand: category === "electronics" ? itembrand : undefined,
+      itemsize: category === "clothing" ? itemsize : undefined,
     });
     await newItem.save();
     res.status(201).json({
@@ -65,25 +63,45 @@ exports.postStock = async (req, res, next) => {
 };
 
 exports.editStock = async (req, res, next) => {
-  const itemName = req.params.itemName;
+  const stockId = req.params.stockId;
+  const ownerId = req.ownerId;
   const updatedData = req.body;
+  console.log(stockId, ownerId, updatedData);
+
+  // Validate required fields
   if (updatedData.category) {
     if (updatedData.category === "electronics") {
-      updatedData.itemBrand = updatedData.itemBrand || undefined;
-      updatedData.itemSize = undefined;
+      updatedData.itembrand = updatedData.itembrand || undefined;
+      updatedData.itemsize = undefined;
     } else if (updatedData.category === "clothing") {
-      updatedData.itemSize = updatedData.itemSize || undefined;
-      updatedData.itemBrand = undefined;
+      updatedData.itemsize = updatedData.itemsize || undefined;
+      updatedData.itembrand = undefined;
     } else {
-      updatedData.itemBrand = undefined;
-      updatedData.itemSize = undefined;
+      updatedData.itembrand = undefined;
+      updatedData.itemsize = undefined;
     }
   }
+
   try {
-    await Stock.findOneAndUpdate({ itemName }, updatedData);
+    const stock = await Stock.findById(stockId);
+    if (!stock) {
+      return res.status(404).json({
+        message: "Stock not found",
+      });
+    }
+
+    if (ownerId !== stock.ownerId.toString()) {
+      return res.status(403).json({
+        message: "You are not authorized to edit this stock",
+      });
+    }
+    const updatedStock = await Stock.findByIdAndUpdate(stockId, updatedData, {
+      new: true,
+    });
+    console.log("Updated Stock:", updatedStock);
     res.status(200).json({
       message: "Stock updated successfully",
-      data: updatedData,
+      data: updatedStock,
     });
   } catch (error) {
     res.status(500).json({
@@ -94,10 +112,22 @@ exports.editStock = async (req, res, next) => {
 };
 
 exports.deleteStock = async (req, res, next) => {
-  const itemId = req.params.id;
-  console.log(itemId);
+  const stockId = req.params.id;
+
+  console.log(stockId);
   try {
-    await Stock.findByIdAndDelete(itemId);
+    const stock = await Stock.findById(stockId);
+    if (!stock) {
+      return res.status(404).json({
+        message: "Stock is not there already",
+      });
+    }
+    if (stock.ownerId.toString() !== req.ownerId) {
+      return res.status(403).json({
+        message: "You can't delete this stock",
+      });
+    }
+    await Stock.findByIdAndDelete(stockId);
     res.status(200).json({
       message: "Stock deleted successfully",
     });

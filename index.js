@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -17,16 +18,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/user", userRouter);
 app.use("/home", homeRouter);
 
-const PORT = 3002;
-
 mongoose
-  .connect(
-    "mongodb+srv://DeepAayup:11banarsi@myDataBase.qzunk41.mongodb.net/inventoryTrackor?retryWrites=true&w=majority&appName=airbnbClone"
-  )
+  .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
-    app.listen(PORT, () => {
-      console.log(`server is running on http://localhost:${PORT}`);
+    app.listen(process.env.PORT, () => {
+      console.log(`server is running on http://localhost:${process.env.PORT}`);
     });
   })
   .catch((err) => {

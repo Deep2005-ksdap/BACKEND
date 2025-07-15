@@ -1,28 +1,32 @@
 const express = require("express");
 // local module
 const homeController = require("../controller/home.controller");
-const userService = require("../service/user.service");
+const { checkUserMiddleware, userCheck } = require("../service/home.service");
 
 const homeRouter = express.Router();
 
 homeRouter.get(
   "/dashboard",
-  userService.checkUserMiddleware,
+  checkUserMiddleware,
+  userCheck,
   homeController.getDashboard
 );
 homeRouter.post(
   "/add-item",
-  userService.checkUserMiddleware,
+  checkUserMiddleware,
+  userCheck,
   homeController.postStock
 );
 homeRouter.delete(
   "/delete-item/:id",
-  userService.checkUserMiddleware,
+  checkUserMiddleware,
+  userCheck,
   homeController.deleteStock
 );
 homeRouter.patch(
-  "/edit-item/:itemName",
-  userService.checkUserMiddleware,
+  "/edit-item/:stockId",
+  checkUserMiddleware,
+  userCheck,
   homeController.editStock
 );
 

@@ -70,8 +70,8 @@ exports.loginUser = async(req, res, next) => {
 
   jwt.sign(
     { userId: user._id },
-    "secrets",
-    { expiresIn: "1h" },
+    process.env.JWT_Secret,
+    { expiresIn: "1d" },
     (err, token) => {
       if (err) {
         console.error("Error signing JWT:", err);
