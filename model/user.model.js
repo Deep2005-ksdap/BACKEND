@@ -25,10 +25,8 @@ const userSchema = new mongoose.Schema({
 });
 
 exports.comparePassword = (password, hash) => {
-  console.log(hash);
   return bcrypt.compare(password, hash)
     .then((isMatch) => {
-      console.log("Password match:", isMatch);
       return isMatch;
     })
     .catch((err) => {

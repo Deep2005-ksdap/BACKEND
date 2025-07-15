@@ -52,7 +52,6 @@ exports.postStock = async (req, res, next) => {
     await newItem.save();
     res.status(201).json({
       message: "New stock added successfully",
-      data: newItem,
     });
   } catch (error) {
     res.status(500).json({
@@ -66,7 +65,6 @@ exports.editStock = async (req, res, next) => {
   const stockId = req.params.stockId;
   const ownerId = req.ownerId;
   const updatedData = req.body;
-  console.log(stockId, ownerId, updatedData);
 
   // Validate required fields
   if (updatedData.category) {
@@ -95,13 +93,11 @@ exports.editStock = async (req, res, next) => {
         message: "You are not authorized to edit this stock",
       });
     }
-    const updatedStock = await Stock.findByIdAndUpdate(stockId, updatedData, {
+     await Stock.findByIdAndUpdate(stockId, updatedData, {
       new: true,
     });
-    console.log("Updated Stock:", updatedStock);
     res.status(200).json({
       message: "Stock updated successfully",
-      data: updatedStock,
     });
   } catch (error) {
     res.status(500).json({
@@ -113,8 +109,7 @@ exports.editStock = async (req, res, next) => {
 
 exports.deleteStock = async (req, res, next) => {
   const stockId = req.params.id;
-
-  console.log(stockId);
+  
   try {
     const stock = await Stock.findById(stockId);
     if (!stock) {

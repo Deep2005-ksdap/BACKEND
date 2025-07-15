@@ -28,7 +28,7 @@ exports.registerUser = [
       const existingUser = await userModel.User.findOne({ email });
       if (existingUser) {
         return res.status(400).json({
-          message: "User already exists",
+          message: "Invalid email or password",
         });
       }
       const newUser = new userModel.User({
@@ -83,7 +83,6 @@ exports.loginUser = async(req, res, next) => {
       res.cookie("token", token, { httpOnly: true });
       return res.status(200).json({
         message: "Login successful",
-        userId: user._id,
       });
     }
   );

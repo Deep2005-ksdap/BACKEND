@@ -1,11 +1,10 @@
 const jwt = require("jsonwebtoken");
 
 exports.checkUserMiddleware = (req, res, next) => {
-  console.log("checkUserMiddleware called");
   const token = req.cookies?.token || req.headers.authorization?.split(" ")[1];
   if (!token) {
     return res.status(401).json({
-      message: "Unauthorized access",
+      message: "Login/Register first",
     });
   }
 
@@ -16,7 +15,7 @@ exports.checkUserMiddleware = (req, res, next) => {
   } catch (error) {
     console.error("Error in checkUserMiddleware:", error);
     return res.status(401).json({
-      message: "Unauthorized access",
+      message: "Login/Register first",
       error: error.message,
     });
   }

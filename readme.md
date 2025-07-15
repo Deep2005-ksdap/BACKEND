@@ -55,8 +55,7 @@ http://localhost:3002/home
 - **Response:**
   ```json
   {
-    "message": "Login successful",
-    "userId": "<user_id>"
+    "message": "Login successful"
   }
   ```
   - Sets a `token` cookie (JWT) for authentication.
@@ -67,45 +66,58 @@ http://localhost:3002/home
 
 #### 3. **GET /home/dashboard**
 
-- **Description:** Get all stock, or filter/search by `itemName` and/or `category`.
+- **Description:** Get all stock, or filter/search by `itemname` and/or `category`.
 - **Query Parameters (optional):**
-  - `itemName` (string, **exact match**)
+  - `itemname` (string, **exact match**)
   - `category` (string, exact match)
 - **Example Requests:**
   - `/home/dashboard`
   - `/home/dashboard?category=electronics`
-  - `/home/dashboard?itemName=phone`
-  - `/home/dashboard?category=clothing&itemName=shirt`
+  - `/home/dashboard?itemname=phone`
+  - `/home/dashboard?category=clothing&itemname=shirt`
 - **Response:**
   ```json
   {
     "message": "You are in the dashboard",
     "data": {
       "message": "Items found", // or "No items found"
+      "lowStockItems": [
+        {
+          "_id": "...",
+          "itemname": "Pen",
+          "itemprice": 10,
+          "itemunits": 2,
+          "category": "stationery",
+          "ownerId": "...",
+          "createdAt": "...",
+          "updatedAt": "..."
+        }
+        // ...more items with itemunits < 5
+      ],
+      "lowStockItemsCount": 1,
+      "totalStockValue": 5000,
       "allStock": [
         {
           "_id": "...",
-          "itemName": "Shirt",
-          "itemPrice": 500,
-          "itemUnits": 10,
-          "itemBrand": null,
-          "itemSize": "M",
+          "itemname": "Shirt",
+          "itemprice": 500,
+          "itemunits": 10,
+          "itembrand": null,
+          "itemsize": "M",
           "category": "clothing",
           "ownerId": "...",
           "createdAt": "...",
           "updatedAt": "..."
-        },
-        ...
-      ],
-      "lowStockItems": [ ... ], // items with itemUnits < 5
-      "totalItems": 1,
-      "addTotal": 5000
+        }
+        // ...more items
+      ]
     }
   }
   ```
-  - `totalItems`: Number of items returned.
-  - `addTotal`: Sum of `itemPrice * itemUnits` for all returned items.
   - `lowStockItems`: Array of items with less than 5 units.
+  - `lowStockItemsCount`: Number of low stock items.
+  - `totalStockValue`: Sum of `itemprice * itemunits` for all returned items.
+  - `allStock`: All items matching the filter.
 
 ---
 
@@ -115,54 +127,38 @@ http://localhost:3002/home
 - **Request Body:**
   ```json
   {
-    "itemName": "Laptop",
-    "itemPrice": 50000,
-    "itemUnits": 5,
+    "itemname": "Laptop",
+    "itemprice": 50000,
+    "itemunits": 5,
     "category": "electronics",
-    "itemBrand": "Dell",      // required if category is electronics
-    "itemSize": "M"           // required if category is clothing
+    "itembrand": "Dell",      // required if category is electronics
+    "itemsize": "M"           // required if category is clothing
   }
   ```
 - **Response:**
   ```json
   {
-    "message": "New stock added successfully",
-    "data": {
-      "_id": "...",
-      "itemName": "Laptop",
-      "itemPrice": 50000,
-      "itemUnits": 5,
-      "category": "electronics",
-      "itemBrand": "Dell",
-      "itemSize": null,
-      "ownerId": "...",
-      "createdAt": "...",
-      "updatedAt": "..."
-    }
+    "message": "New stock added successfully"
   }
   ```
 
 ---
 
-#### 5. **PATCH /home/edit-item/:itemName**
+#### 5. **PATCH /home/edit-item/:stockId**
 
-- **Description:** Edit an existing stock item by its `itemName`.
-- **Request Params:** `itemName` (string)
+- **Description:** Edit an existing stock item by its MongoDB `_id`.
+- **Request Params:** `stockId` (string)
 - **Request Body:** Any fields to update, e.g.:
   ```json
   {
-    "itemPrice": 60000,
-    "itemUnits": 7
+    "itemprice": 60000,
+    "itemunits": 7
   }
   ```
 - **Response:**
   ```json
   {
-    "message": "Stock updated successfully",
-    "data": {
-      "itemPrice": 60000,
-      "itemUnits": 7
-    }
+    "message": "Stock updated successfully"
   }
   ```
 
@@ -185,11 +181,11 @@ http://localhost:3002/home
 
 | Field      | Type    | Required | Description                        |
 |------------|---------|----------|------------------------------------|
-| itemName   | String  | Yes      | Name of the item                   |
-| itemPrice  | Number  | Yes      | Price of the item                  |
-| itemUnits  | Number  | Yes      | Number of units in stock           |
-| itemBrand  | String  | No       | Brand (for electronics)            |
-| itemSize   | String  | No       | Size (for clothing)                |
+| itemname   | String  | Yes      | Name of the item                   |
+| itemprice  | Number  | Yes      | Price of the item                  |
+| itemunits  | Number  | Yes      | Number of units in stock           |
+| itembrand  | String  | No       | Brand (for electronics)            |
+| itemsize   | String  | No       | Size (for clothing)                |
 | category   | String  | Yes      | Category (e.g., electronics, clothing) |
 | ownerId    | ObjectId| Yes      | Reference to user                  |
 
@@ -199,13 +195,13 @@ http://localhost:3002/home
 
 - All responses are in JSON.
 - All `/home/*` routes require authentication (JWT in cookie or `Authorization` header).
-- For **searching**, `itemName` uses **exact match** (not partial).
+- For **searching**, `itemname` uses **exact match** (not partial).
 - For **filtering**, `category` is an exact match.
-- If no query parameters are provided to `/home/dashboard`, all stock items are returned.
+- If no query parameters are provided to `/home/dashboard`, all stock items are returned for the authenticated user.
 - Error responses will include a `message` and `error` field.
-- `addTotal` in `/dashboard` is the sum of all `itemPrice * itemUnits` for the returned items.
+- `totalStockValue` in `/dashboard` is the sum of all `itemprice * itemunits` for the returned items.
 - Passwords are hashed before storing in the database.
-- JWT secret is hardcoded as `"secrets"` for demo; use environment variables in production.
+- JWT secret should be set in your `.env` as `JWT_Secret`.
 
 ---
 
@@ -213,9 +209,15 @@ http://localhost:3002/home
 
 1. Install dependencies:  
    `npm install`
-2. Start the server:  
+2. Set up your `.env` file with:
+   ```
+   MONGO_URI=<your-mongodb-uri>
+   PORT=3002
+   JWT_Secret=<your-secret>
+   ```
+3. Start the server:  
    `node index.js`
-3. The API will be available at `http://localhost:3002/home`
+4. The API will be available at `http://localhost:3002/home`
 
 ---
 
@@ -232,4 +234,4 @@ http://localhost:3002/home
 
 ## 📬 **Contact**
 
-For support, contact the developer or open
+For support, contact the developer or open an
