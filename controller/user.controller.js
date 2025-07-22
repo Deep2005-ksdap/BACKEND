@@ -40,7 +40,12 @@ exports.registerUser = [
         password,
       });
 
-      await userModel.passwordHashing(newUser);
+      const user = await userModel.passwordHashing(newUser);
+      if (user) {
+        res.status(200).json({
+          message: "User has been Created",
+        });
+      }
     } catch (error) {
       console.error("Error in Registration:", error);
       return res.status(500).json({
@@ -51,7 +56,7 @@ exports.registerUser = [
   },
 ];
 
-exports.loginUser = async(req, res, next) => {
+exports.loginUser = async (req, res, next) => {
   const { email, password } = req.body;
 
   const user = await userModel.User.findOne({ email });
@@ -69,7 +74,7 @@ exports.loginUser = async(req, res, next) => {
   }
 
   jwt.sign(
-    { userId: user._id },
+    { userId: user._id, username: user.fullname },
     process.env.JWT_Secret,
     { expiresIn: "1d" },
     (err, token) => {
@@ -86,4 +91,27 @@ exports.loginUser = async(req, res, next) => {
       });
     }
   );
+};
+
+exports.checkAuth = (req, res) => {
+  try {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ isLoggedIn: false });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return res.status(200).json({
+      isLoggedIn: true,
+    });
+  } catch (err) {
+    return res.status(401).json({ isLoggedIn: false });
+  }
+};
+
+exports.logoutUser = (req, res, next) => {
+  res.clearCookie("token");
+  return res.status(200).json({
+    message: "Logout successful",
+  });
 };

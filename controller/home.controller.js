@@ -3,6 +3,7 @@ const { checkStock } = require("../service/home.service");
 
 exports.getDashboard = async (req, res, next) => {
   const ownerId = req.ownerId;
+  const username = req.username;
   const { itemname, category } = req.query;
 
   const allStock = await Stock.find({
@@ -17,6 +18,7 @@ exports.getDashboard = async (req, res, next) => {
     message: "You are in the dashboard",
     data: {
       message: allStock.length > 0 ? "Items found" : "No items found",
+      username,
       lowStockItems,
       lowStockItemsCount,
       totalStockValue: addTotal.totalStockValue,

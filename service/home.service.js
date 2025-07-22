@@ -23,12 +23,14 @@ exports.checkUserMiddleware = (req, res, next) => {
 
 exports.userCheck = (req, res, next) => {
   const ownerId = req.user.userId;
+  const username = req.user.username;
   if (!ownerId) {
     return res.status(400).json({
       message: "Login first to access the feature",
     });
   }
   req.ownerId = ownerId;
+  req.username = username;
   next();
 }
 

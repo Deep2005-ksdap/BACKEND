@@ -10,7 +10,12 @@ const homeRouter = require("./router/home.route");
 
 const app = express();
 
-app.use(cors());
+app.use(cors(
+  {
+    origin: "http://localhost:5173", // only my frontend part
+    credentials: true, //allow cookies if needed
+  }
+));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
