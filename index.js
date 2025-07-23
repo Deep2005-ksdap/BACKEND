@@ -12,7 +12,7 @@ const app = express();
 
 app.use(cors(
   {
-    origin: "*", 
+    origin: "https://inventory-trackor.onrender.com", 
     credentials: true, //allow cookies if needed
   }
 ));
