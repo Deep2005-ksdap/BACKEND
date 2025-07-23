@@ -12,7 +12,7 @@ const app = express();
 
 app.use(cors(
   {
-    origin: "http://localhost:5173", // only my frontend part
+    origin: "*", 
     credentials: true, //allow cookies if needed
   }
 ));
