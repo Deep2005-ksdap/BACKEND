@@ -100,10 +100,12 @@ exports.checkAuth = (req, res) => {
       return res.status(401).json({ isLoggedIn: false });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return res.status(200).json({
-      isLoggedIn: true,
-    });
+    const decoded = jwt.verify(token, process.env.JWT_Secret);
+    if (decoded) {
+      return res.status(200).json({
+        isLoggedIn: true,
+      });
+    }
   } catch (err) {
     return res.status(401).json({ isLoggedIn: false });
   }
