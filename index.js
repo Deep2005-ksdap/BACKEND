@@ -16,6 +16,7 @@ app.use(cors(
     credentials: true, //allow cookies if needed
   }
 ));
+console.log(process.env.FRONTEND_URL, process.env.JWT_SECRET)
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
