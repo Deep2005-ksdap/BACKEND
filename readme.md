@@ -201,7 +201,7 @@ http://localhost:3002/home
 - Error responses will include a `message` and `error` field.
 - `totalStockValue` in `/dashboard` is the sum of all `itemprice * itemunits` for the returned items.
 - Passwords are hashed before storing in the database.
-- JWT secret should be set in your `.env` as `JWT_Secret`.
+- JWT secret should be set in your `.env` as `JWT_SECRET`.
 
 ---
 
@@ -213,7 +213,7 @@ http://localhost:3002/home
    ```
    MONGO_URI=<your-mongodb-uri>
    PORT=3002
-   JWT_Secret=<your-secret>
+   JWT_SECRET=<your-secret>
    ```
 3. Start the server:  
    `node index.js`

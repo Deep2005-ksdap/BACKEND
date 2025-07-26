@@ -75,7 +75,7 @@ exports.loginUser = async (req, res, next) => {
 
   jwt.sign(
     { userId: user._id, username: user.fullname },
-    process.env.JWT_Secret,
+    process.env.JWT_SECRET,
     { expiresIn: "1d" },
     (err, token) => {
       if (err) {
@@ -100,7 +100,7 @@ exports.checkAuth = (req, res) => {
       return res.status(401).json({ isLoggedIn: false });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_Secret);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (decoded) {
       return res.status(200).json({
         isLoggedIn: true,
